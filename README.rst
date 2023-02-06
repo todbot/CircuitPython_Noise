@@ -20,7 +20,6 @@ Introduction
 
 Simplex noise (like Perlin) for CircuitPython
 
-
 Dependencies
 =============
 This driver depends on:
@@ -31,35 +30,7 @@ Please ensure all dependencies are available on the CircuitPython filesystem.
 This is easily achieved by downloading
 `the Adafruit library and driver bundle <https://circuitpython.org/libraries>`_
 or individual libraries can be installed using
-`circup <https://github.com/adafruit/circup>`_.Installing from PyPI
-=====================
-.. note:: This library is not available on PyPI yet. Install documentation is included
-   as a standard element. Stay tuned for PyPI availability!
-
-.. todo:: Remove the above note if PyPI version is/will be available at time of release.
-
-On supported GNU/Linux systems like the Raspberry Pi, you can install the driver locally `from
-PyPI <https://pypi.org/project/circuitpython-noise/>`_.
-To install for current user:
-
-.. code-block:: shell
-
-    pip3 install circuitpython-noise
-
-To install system-wide (this may be required in some cases):
-
-.. code-block:: shell
-
-    sudo pip3 install circuitpython-noise
-
-To install in a virtual environment in your current project:
-
-.. code-block:: shell
-
-    mkdir project-name && cd project-name
-    python3 -m venv .venv
-    source .env/bin/activate
-    pip3 install circuitpython-noise
+`circup <https://github.com/adafruit/circup>`_.
 
 Installing to a Connected CircuitPython Device with Circup
 ==========================================================
@@ -76,7 +47,7 @@ following command to install:
 
 .. code-block:: shell
 
-    circup install noise
+    circup install cedargrove_colorfader
 
 Or the following command to update an existing version:
 
@@ -84,11 +55,23 @@ Or the following command to update an existing version:
 
     circup update
 
+
 Usage Example
 =============
 
-.. todo:: Add a quick, simple example. It and other examples should live in the
-examples folder and be included in docs/examples.rst.
+.. code-block:: python
+
+    import time
+    from noise import noise
+
+    i=0
+    while True:
+        n = noise(0.02 * i)
+        i += 1
+        # print a random terrain with asterisks
+        print( " " * int(max(n+1,0) * 40), "*")
+        time.sleep(0.01)
+
 
 Documentation
 =============
@@ -103,3 +86,6 @@ Contributing
 Contributions are welcome! Please read our `Code of Conduct
 <https://github.com/todbot/CircuitPython_Noise/blob/HEAD/CODE_OF_CONDUCT.md>`_
 before contributing to help this project stay welcoming.
+
+
+
