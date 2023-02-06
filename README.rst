@@ -86,6 +86,3 @@ Contributing
 Contributions are welcome! Please read our `Code of Conduct
 <https://github.com/todbot/CircuitPython_Noise/blob/HEAD/CODE_OF_CONDUCT.md>`_
 before contributing to help this project stay welcoming.
-
-
-

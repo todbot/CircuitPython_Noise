@@ -8,10 +8,10 @@
 import time
 from simplexnoise import noise
 
-i=0
+i = 0
 while True:
     n = noise(0.02 * i)  # get a 1D noise value
     i += 1
     # print a random terrain with asterisks
-    print( " " * int(max(n+1,0) * 40), "*")
+    print(" " * int(max(n + 1, 0) * 40), "*")
     time.sleep(0.01)
