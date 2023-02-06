@@ -3,10 +3,12 @@
 #
 # SPDX-License-Identifier: Unlicense
 
-# print an undulating terrain to the console with asterisks
+"""
+Print an undulating terrain to the console with asterisks.
+"""
 
 import time
-from simplexnoise import noise
+from noise import noise
 
 i = 0
 while True:
