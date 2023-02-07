@@ -82,6 +82,7 @@ def noise_init():
 
 def noise(xin, yin=0):  # pylint: disable=too-many-locals
     """2D SimplexNoise
+
     :param float xin x-location in 2D noise space
     :param float yin y-location in 2D noise space
 
