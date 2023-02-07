@@ -47,7 +47,7 @@ following command to install:
 
 .. code-block:: shell
 
-    circup install cedargrove_colorfader
+    circup install noise
 
 Or the following command to update an existing version:
 
