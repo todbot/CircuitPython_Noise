@@ -32,7 +32,7 @@ from math import sqrt, floor
 
 
 class Grad:  # pylint: disable=too-few-public-methods
-    """Holder for 3D grad"""
+    """Holder for 3D grad. Used internally by noise()"""
 
     def __init__(self, x, y, z):
         self.x, self.y, self.z = x, y, z
