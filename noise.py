@@ -69,7 +69,7 @@ permMod12 = [0] * 512
 
 
 def dot(grad, x, y):
-    """Compute dot product of grad against x,y"""
+    """Compute dot product of grad against x,y. Used internally by noise()"""
     return grad.x * x + grad.y * y
 
 
@@ -83,11 +83,10 @@ def noise_init():
 def noise(xin, yin=0):  # pylint: disable=too-many-locals
     """2D SimplexNoise
 
-    :param float xin x-location in 2D noise space
-    :param float yin y-location in 2D noise space
+    :param float xin: x-location in 2D noise space
+    :param float yin: y-location in 2D noise space
 
-    :return float noise value between -1 and 1
-    """
+    :return float: noise value between -1 and 1."""
 
     s = (xin + yin) * F2
     i = floor(xin + s)
