@@ -66,7 +66,7 @@ To install for current user:
 .. code-block:: shell
 
     pip3 install circuitpython-noise
-    
+
 
 Usage Example
 =============
