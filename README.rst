@@ -56,6 +56,18 @@ Or the following command to update an existing version:
     circup update
 
 
+Installing from PyPI
+=====================
+
+On supported GNU/Linux systems like the Raspberry Pi, you can install the driver locally `from
+PyPI <https://pypi.org/project/circuitpython-noise/>`_.
+To install for current user:
+
+.. code-block:: shell
+
+    pip3 install circuitpython-noise
+    
+
 Usage Example
 =============
 
