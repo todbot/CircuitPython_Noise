@@ -16,8 +16,15 @@ Implementation Notes
 --------------------
 
 A basic port of https://weber.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf
+Also see: https://github.com/stegu/perlin-noise/blob/master/src/simplexnoise1234.c
 
-No special requirements. Also works in desktop CPython.
+Optimised for CircuitPython/MicroPython by:
+
+- F2, G2, and the x2/y2 offset are pre-computed constants (no math.sqrt at startup)
+- ``floor()`` is inlined, avoiding two function calls per ``noise()`` invocation
+- ``dot()`` is inlined via ``_gx``/``_gy`` tuples, avoiding per-call function and attribute lookups
+
+Also works in desktop CPython.
 
 """
 
@@ -27,8 +34,10 @@ No special requirements. Also works in desktop CPython.
 __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/todbot/CircuitPython_Noise.git"
 
-
-from math import sqrt, floor
+try:
+    from micropython import native
+except ImportError:
+    native = lambda f: f  # no-op on CircuitPython / CPython
 
 
 class Grad:  # pylint: disable=too-few-public-methods
@@ -38,8 +47,10 @@ class Grad:  # pylint: disable=too-few-public-methods
         self.x, self.y, self.z = x, y, z
 
 
-F2 = 0.5 * (sqrt(3.0) - 1.0)
-G2 = (3.0 - sqrt(3.0)) / 6.0
+# Pre-computed constants (avoids math.sqrt on import, and repeated arithmetic in noise())
+F2 = 0.3660254037844386
+G2 = 0.21132486540518713
+_G2x2m1 = 2.0 * G2 - 1.0  # == -0.5773..., used for x2/y2 corner offsets
 
 # fmt: off
 p = (  # 256 elements
@@ -62,6 +73,9 @@ grad3 = (
     Grad(-1,0,1),Grad(1,0,-1),Grad(-1,0,-1),Grad(0,1,1),Grad(0,-1,1),
     Grad(0,1,-1),Grad(0,-1,-1)
 )
+# x,y components of grad3 as plain tuples — faster than Grad attribute lookup
+_gx = (1, -1,  1, -1, 1, -1,  1, -1, 0,  0,  0,  0)
+_gy = (1,  1, -1, -1, 0,  0,  0,  0, 1, -1,  1, -1)
 # fmt: on
 
 perm = [0] * 512  # filled out in noise_init()
@@ -80,6 +94,7 @@ def noise_init():
         permMod12[i] = perm[i] % 12
 
 
+@native
 def noise(xin, yin=0):  # pylint: disable=too-many-locals
     """2D SimplexNoise
 
@@ -88,42 +103,71 @@ def noise(xin, yin=0):  # pylint: disable=too-many-locals
 
     :return float: noise value between -1 and 1."""
 
-    s = (xin + yin) * F2
-    i = floor(xin + s)
-    j = floor(yin + s)
-    t = (i + j) * G2
-    x0 = xin - (i - t)
-    y0 = yin - (j - t)
-    i1 = 0
-    j1 = 1
-    if x0 > y0:
-        i1 = 1
-        j1 = 0
+    # Local aliases for globals: MicroPython resolves globals via dict lookup on every access;
+    # locals are indexed directly, so aliasing here pays off across the 17 uses below.
+    f2 = F2
+    g2 = G2
+    g2m = _G2x2m1
+    pm12 = permMod12
+    pm = perm
+    gx = _gx
+    gy = _gy
 
-    x1 = x0 - i1 + G2
-    y1 = y0 - j1 + G2
-    x2 = x0 - 1.0 + 2.0 * G2
-    y2 = y0 - 1.0 + 2.0 * G2
+    # Skew input space to find which simplex cell we're in.
+    # Inline floor() via int() + fixup: avoids two math.floor function calls.
+    s = (xin + yin) * f2
+    xs = xin + s
+    ys = yin + s
+    i = int(xs)
+    j = int(ys)
+    if xs < i:
+        i -= 1  # fix floor for negative values
+    if ys < j:
+        j -= 1
+
+    # Unskew the cell origin back to (x,y) space
+    t = (i + j) * g2
+    x0 = xin - i + t
+    y0 = yin - j + t
+
+    # Determine which simplex triangle we're in
+    i1 = j1 = 0
+    if x0 > y0:
+        i1 = 1  # lower triangle: step (1,0) then (1,1)
+    else:
+        j1 = 1  # upper triangle: step (0,1) then (1,1)
+
+    # Offsets for the middle and last corners in (x,y) unskewed coords.
+    # x2 = x0 - 1.0 + 2.0*G2  ==  x0 + g2m  (pre-computed, saves a multiply)
+    x1 = x0 - i1 + g2
+    y1 = y0 - j1 + g2
+    x2 = x0 + g2m
+    y2 = y0 + g2m
+
+    # Gradient indices for the three corners
     ii = i & 255
     jj = j & 255
-    gi0 = permMod12[ii + perm[jj]]
-    gi1 = permMod12[ii + i1 + perm[jj + j1]]
-    gi2 = permMod12[ii + 1 + perm[jj + 1]]
-    n0 = 0.0
+    gi0 = pm12[ii + pm[jj]]
+    gi1 = pm12[ii + i1 + pm[jj + j1]]
+    gi2 = pm12[ii + 1 + pm[jj + 1]]
+
+    # Corner contributions.
+    # dot() is inlined via gx/gy tuples: avoids 2-3 function calls and Grad attribute lookups.
+    n0 = n1 = n2 = 0.0
     t0 = 0.5 - x0 * x0 - y0 * y0
     if t0 >= 0.0:
         t0 *= t0
-        n0 = t0 * t0 * dot(grad3[gi0], x0, y0)
-    n1 = 0.0
+        n0 = t0 * t0 * (gx[gi0] * x0 + gy[gi0] * y0)
+
     t1 = 0.5 - x1 * x1 - y1 * y1
     if t1 >= 0.0:
         t1 *= t1
-        n1 = t1 * t1 * dot(grad3[gi1], x1, y1)
-    n2 = 0.0
+        n1 = t1 * t1 * (gx[gi1] * x1 + gy[gi1] * y1)
+
     t2 = 0.5 - x2 * x2 - y2 * y2
     if t2 >= 0.0:
         t2 *= t2
-        n2 = t2 * t2 * dot(grad3[gi2], x2, y2)
+        n2 = t2 * t2 * (gx[gi2] * x2 + gy[gi2] * y2)
 
     return 70.0 * (n0 + n1 + n2)
 

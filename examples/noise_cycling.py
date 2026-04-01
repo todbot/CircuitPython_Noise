@@ -11,7 +11,7 @@ spinning in a circle in 2D noise space.
 """
 
 import time
-from math import sin, cos, pi
+from math import cos, pi, sin
 
 from noise import noise
 
@@ -42,9 +42,7 @@ while True:
 
     print(" " * int(max(n + 1, 0) * 40), "*")
     if show_stats:
-        print(
-            "n:%+3.3f (%+3.3f:%+3.3f) %+3.3f %0.4f" % (n, nmin, nmax, theta, sumt / i)
-        )
+        print("n:%+3.3f (%+3.3f:%+3.3f) %+3.3f %0.4f" % (n, nmin, nmax, theta, sumt / i))
 
     i += 1
     time.sleep(0.01)

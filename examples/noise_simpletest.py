@@ -8,6 +8,7 @@ Print an undulating terrain to the console with asterisks.
 """
 
 import time
+
 from noise import noise
 
 i = 0
