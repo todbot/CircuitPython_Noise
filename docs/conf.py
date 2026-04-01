@@ -104,8 +104,6 @@ napoleon_numpy_docstring = False
 
 # -- Options for HTML output ----------------------------------------------
 
-import sphinx_rtd_theme
-
 html_theme = "sphinx_rtd_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
